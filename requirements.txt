@@ -1,0 +1,14 @@
+pandas
+faker
+scikit-learn
+joblib
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+pytest
+httpx
+python-dotenv
+pydantic-settings
+alembic
+markdown-pdf
