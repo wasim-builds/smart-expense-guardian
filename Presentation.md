@@ -29,10 +29,17 @@ Unlike other apps that send your data to expensive third-party APIs (like OpenAI
 ### ✨ 4. Premium "Fintech-Unicorn" Experience
 We built a beautiful, high-end interface (using Glassmorphism and real-time data loading) that makes users feel like they are using a premium, multi-million dollar product like Robinhood or Apple Card.
 
+### 📊 5. Deep Analytics & Budgeting
+The application visualizes spending habits in real-time, displaying Donut Charts and Bar Charts. It also tracks the user's spending against a customizable monthly budget, throwing intelligent warnings if spending exceeds 80% or 100% of their limit.
+
+### 🤖 6. AI Financial Advisor & Subscription Management
+A fully integrated, floating AI Chat widget is ready to give contextual advice on the user's ledger. Furthermore, a backend algorithm scans the database to automatically identify recurring payments (Netflix, Gym) and organizes them into a "Fixed Costs" dashboard.
+
 ---
 
 ## 4. Built for Scale
 This isn't a fragile prototype. It's built on an **Enterprise-Grade Architecture**:
 * **Backend:** High-performance Python FastAPI with strict data validation.
 * **Frontend:** React + TanStack Query for instant UI updates.
-* **Machine Learning:** Scikit-Learn models trained and executed locally with 0ms latency.
+* **Machine Learning & AI:** Scikit-Learn models trained and executed locally with 0ms latency, alongside a contextual AI conversational engine.
+* **Data Portability:** 1-click CSV generation for data export.

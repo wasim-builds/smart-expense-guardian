@@ -20,6 +20,7 @@ While most teams build standard CRUD (Create, Read, Update, Delete) applications
 2. **Enterprise Architecture**: Built on a modular FastAPI backend with SQLAlchemy, Alembic migrations, and Pydantic validation. This proves an understanding of scalable system design, not just prototyping.
 3. **Optimized Frontend Data Flow**: Instead of brittle state management, we use **React Query (TanStack)** for caching, optimistic UI updates, and background refetching. 
 4. **Stunning Glassmorphism UX**: Hackathons are won on presentation. The UI utilizes Tailwind CSS backdrop blurs, gradients, and Recharts to deliver a premium, "fintech-unicorn" aesthetic that wows judges instantly.
+5. **Advanced Feature Set**: Includes a full Analytics Dashboard, customizable Monthly Budgets with Real-time Alerts, a Recurring Subscriptions Manager, and a contextual AI Financial Advisor Chat widget.
 
 ---
 
