@@ -6,6 +6,7 @@ class TransactionCreate(BaseModel):
     merchant: str
     description: str
     amount: float
+    account_name: Optional[str] = "Main Account"
     date: Optional[str] = None
 
 class TransactionResponse(BaseModel):
@@ -13,6 +14,7 @@ class TransactionResponse(BaseModel):
     merchant: str
     description: str
     amount: float
+    account_name: str
     category: str
     is_fraud: bool
     anomaly_score: Optional[float]

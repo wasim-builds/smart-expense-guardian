@@ -6,11 +6,15 @@ import {
 } from 'recharts';
 import { PieChart as PieChartIcon, TrendingUp, Target, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useCurrency } from '../context/CurrencyContext';
+import { useAccount } from '../context/AccountContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f43f5e', '#f59e0b', '#06b6d4'];
 
 export default function AnalyticsDashboard() {
+  const { formatCurrency } = useCurrency();
+  const { activeAccount } = useAccount();
   const [budgetLimit, setBudgetLimit] = useState(5000);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
@@ -29,16 +33,16 @@ export default function AnalyticsDashboard() {
       setBudgetLimit(parsed);
       localStorage.setItem('monthlyBudget', parsed);
       setIsEditingBudget(false);
-      toast.success(`Monthly budget set to $${parsed}`);
+      toast.success(`Monthly budget set to ${formatCurrency(parsed)}`);
     } else {
       toast.error("Please enter a valid number");
     }
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ['analyticsSummary'],
+    queryKey: ['analyticsSummary', activeAccount],
     queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/analytics/summary`);
+      const res = await axios.get(`${API_BASE_URL}/analytics/summary?account_name=${encodeURIComponent(activeAccount)}`);
       return res.data;
     }
   });
@@ -59,7 +63,7 @@ export default function AnalyticsDashboard() {
         <div className="bg-[#18181b] border border-zinc-800 p-3 rounded-xl shadow-2xl">
           <p className="text-sm font-medium text-white">{payload[0].name || payload[0].payload.merchant}</p>
           <p className="text-lg font-bold text-emerald-400">
-            ${payload[0].value.toFixed(2)}
+            {formatCurrency(payload[0].value)}
           </p>
         </div>
       );
@@ -68,21 +72,23 @@ export default function AnalyticsDashboard() {
   };
 
   const totalSpend = data.total_spend || 0;
-  const progressPercent = Math.min((totalSpend / budgetLimit) * 100, 100);
+  const rawPercent = (totalSpend / budgetLimit) * 100;
+  const displayPercent = isFinite(rawPercent) ? rawPercent : 0;
+  const ringPercent = Math.min(displayPercent, 100);
   
-  // Color the ring red if over 80%
-  const ringColor = progressPercent >= 100 ? '#f87171' : progressPercent >= 80 ? '#fbbf24' : '#10b981';
+  // Color the ring red if over 80%, dark red if over 100%
+  const ringColor = displayPercent > 100 ? '#ef4444' : displayPercent >= 80 ? '#fbbf24' : '#10b981';
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+  const strokeDashoffset = circumference - (ringPercent / 100) * circumference;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       
       {/* Budget Progress Ring */}
-      <div className="bg-zinc-900/40 backdrop-blur-xl p-8 rounded-3xl border border-zinc-800 shadow-2xl flex flex-col justify-center items-center relative">
+      <div className="glass-panel p-8 rounded-3xl flex flex-col justify-center items-center relative group hover:border-emerald-500/30 transition-all duration-500">
         <div className="absolute top-6 left-6 flex items-center text-zinc-400 font-bold uppercase text-xs tracking-widest">
-          <Target className="w-4 h-4 mr-2" />
+          <Target className="w-4 h-4 mr-2 text-emerald-400" />
           Budget Limit
         </div>
         
@@ -109,12 +115,21 @@ export default function AnalyticsDashboard() {
         )}
 
         <div className="relative flex items-center justify-center w-full h-[250px] mt-4">
-          <svg className="transform -rotate-90 w-48 h-48">
+          <svg className="transform -rotate-90 w-48 h-48 drop-shadow-2xl">
+            <defs>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
             {/* Background ring */}
             <circle
               cx="96" cy="96" r={radius}
               stroke="currentColor" strokeWidth="12" fill="transparent"
-              className="text-zinc-800"
+              className="text-zinc-800/50"
             />
             {/* Progress ring */}
             <circle
@@ -123,23 +138,27 @@ export default function AnalyticsDashboard() {
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              className="transition-all duration-1000 ease-in-out"
+              className="transition-all duration-1000 ease-out drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+              filter="url(#glow)"
             />
           </svg>
           <div className="absolute flex flex-col items-center justify-center text-center">
             <span className="text-3xl font-black font-mono text-white">
-              {progressPercent.toFixed(0)}%
+              {displayPercent.toFixed(0)}%
             </span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">
-              ${totalSpend.toFixed(0)} / ${budgetLimit}
-            </span>
+            <div className="text-[10px] font-medium text-zinc-500 mt-2 flex flex-col items-center leading-tight w-24">
+              <span className="truncate w-full text-center">{formatCurrency(totalSpend)}</span>
+              <span className="text-zinc-600">out of</span>
+              <span className="truncate w-full text-center">{formatCurrency(budgetLimit)}</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Category Breakdown */}
-      <div className="bg-zinc-900/40 backdrop-blur-xl p-8 rounded-3xl border border-zinc-800 shadow-2xl">
-        <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+      <div className="glass-panel p-8 rounded-3xl group hover:border-emerald-500/30 transition-all duration-500 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full"></div>
+        <h2 className="text-xl font-bold text-white mb-6 flex items-center relative z-10">
           <PieChartIcon className="w-5 h-5 mr-3 text-emerald-400" />
           Categories
         </h2>
@@ -180,8 +199,9 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Top Merchants */}
-      <div className="bg-zinc-900/40 backdrop-blur-xl p-8 rounded-3xl border border-zinc-800 shadow-2xl">
-        <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+      <div className="glass-panel p-8 rounded-3xl group hover:border-blue-500/30 transition-all duration-500 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full"></div>
+        <h2 className="text-xl font-bold text-white mb-6 flex items-center relative z-10">
           <TrendingUp className="w-5 h-5 mr-3 text-blue-400" />
           Merchants
         </h2>

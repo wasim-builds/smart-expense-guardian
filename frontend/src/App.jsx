@@ -9,19 +9,25 @@ import TransactionFeed from './components/TransactionFeed';
 import SubscriptionsManager from './components/SubscriptionsManager';
 import AIChatWidget from './components/AIChatWidget';
 
+import { CurrencyProvider, useCurrency } from './context/CurrencyContext';
+import { AccountProvider, useAccount } from './context/AccountContext';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-function App() {
+function AppContent() {
   const queryClient = useQueryClient();
+  const { currency, changeCurrency, formatCurrency, availableCurrencies } = useCurrency();
+  const { activeAccount, changeAccount, accounts, refetchAccounts } = useAccount();
+  
   const [merchant, setMerchant] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
 
   // Fetch summary stats for top cards
   const { data: summary } = useQuery({
-    queryKey: ['analyticsSummary'],
+    queryKey: ['analyticsSummary', activeAccount],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE_URL}/analytics/summary`);
+      const { data } = await axios.get(`${API_BASE_URL}/analytics/summary?account_name=${encodeURIComponent(activeAccount)}`);
       return data;
     },
     onError: () => toast.error("Could not load backend data.")
@@ -49,7 +55,7 @@ function App() {
         // Check for budget alerts if it's not a fraud transaction
         if (!newTx.is_fraud) {
           if (percent >= 100) {
-            toast.error(`Budget Exceeded: You are at ${percent.toFixed(0)}% of your $${budgetLimit} limit!`, {
+            toast.error(`Budget Exceeded: You are at ${percent.toFixed(0)}% of your ${formatCurrency(budgetLimit)} limit!`, {
               icon: '🛑',
               duration: 6000,
             });
@@ -76,7 +82,7 @@ function App() {
       }
       
       if (newTx.is_fraud) {
-        toast.error(`Fraud Alert: $${newTx.amount.toFixed(2)} at ${newTx.merchant}`, {
+        toast.error(`Fraud Alert: ${formatCurrency(newTx.amount)} at ${newTx.merchant}`, {
           icon: '🚨',
           duration: 6000,
           style: { background: '#18181b', color: '#f87171', border: '1px solid #7f1d1d' }
@@ -101,7 +107,8 @@ function App() {
       merchant,
       amount: parseFloat(amount),
       description,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      account_name: activeAccount
     });
   };
 
@@ -110,27 +117,61 @@ function App() {
   const anomalyCount = summary?.total_fraud || 0;
 
   return (
-    <div className="min-h-screen bg-[#09090b] selection:bg-emerald-500/30 p-4 md:p-8 font-sans text-zinc-100">
-      <Toaster position="top-right" />
+    <div className="min-h-screen bg-transparent selection:bg-emerald-500/30 p-4 md:p-8 font-sans text-zinc-100">
+      <Toaster position="top-right" toastOptions={{ style: { background: '#111113', color: '#fff', border: '1px solid #27272a' } }} />
       
       <div className="max-w-7xl mx-auto space-y-10">
         
-        {/* Navbar / Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-zinc-800/60 gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-              <ShieldAlert className="w-6 h-6 text-emerald-400" />
+        <header className="glass-panel rounded-3xl px-8 py-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-4 z-40">
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all">
+              <ShieldAlert className="w-7 h-7 text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center">
+              <h1 className="text-2xl font-black tracking-tight text-white flex items-center">
                 Smart Expense Guardian
               </h1>
-              <p className="text-zinc-500 text-sm font-medium">
+              <p className="text-zinc-400 text-sm font-semibold tracking-wide uppercase mt-1">
                 Neural-Net Secured Finance
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            
+            <select
+              value={activeAccount}
+              onChange={(e) => {
+                if (e.target.value === '__add_new__') {
+                  const newAcc = prompt("Enter new account name:");
+                  if (newAcc) {
+                    changeAccount(newAcc);
+                    // Add it implicitly by starting to post/fetch to it
+                  }
+                } else {
+                  changeAccount(e.target.value);
+                }
+              }}
+              className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-2 text-sm font-bold text-blue-400 focus:outline-none cursor-pointer hover:border-blue-500/50 transition-colors"
+            >
+              {accounts.map(acc => (
+                <option key={acc} value={acc}>{acc}</option>
+              ))}
+              {activeAccount && !accounts.includes(activeAccount) && (
+                <option key={activeAccount} value={activeAccount}>{activeAccount}</option>
+              )}
+              <option value="__add_new__">+ Add Account...</option>
+            </select>
+            
+            <select
+              value={currency}
+              onChange={(e) => changeCurrency(e.target.value)}
+              className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-2 text-sm font-bold text-emerald-400 focus:outline-none cursor-pointer hover:border-emerald-500/50 transition-colors"
+            >
+              {availableCurrencies.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            
             <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center space-x-2 text-xs font-semibold text-zinc-300">
               <div className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -143,30 +184,30 @@ function App() {
 
         {/* Dashboard Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-zinc-900/50 backdrop-blur-md p-6 rounded-3xl border border-zinc-800/80 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <p className="text-sm font-medium text-zinc-400 flex items-center">
-              <Wallet className="w-4 h-4 mr-2" /> Total Volume Protected
+          <div className="glass-card p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] hover:border-emerald-500/30 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <p className="text-xs font-bold text-zinc-400 flex items-center tracking-widest uppercase mb-3">
+              <Wallet className="w-4 h-4 mr-2 text-emerald-400" /> Total Volume Protected
             </p>
-            <p className="text-4xl font-black mt-3 font-mono tracking-tight text-white">
-              ${totalSpend.toFixed(2)}
+            <p className="text-4xl font-black font-mono tracking-tight text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+              {formatCurrency(totalSpend)}
             </p>
           </div>
-          <div className="bg-zinc-900/50 backdrop-blur-md p-6 rounded-3xl border border-zinc-800/80 relative overflow-hidden group">
-             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <p className="text-sm font-medium text-zinc-400 flex items-center">
-              <Activity className="w-4 h-4 mr-2" /> ML Analyzed Events
+          <div className="glass-card p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] hover:border-blue-500/30 transition-all duration-300">
+             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <p className="text-xs font-bold text-zinc-400 flex items-center tracking-widest uppercase mb-3">
+              <Activity className="w-4 h-4 mr-2 text-blue-400" /> ML Analyzed Events
             </p>
-            <p className="text-4xl font-black mt-3 font-mono tracking-tight text-white">
+            <p className="text-4xl font-black font-mono tracking-tight text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
               {transactionCount}
             </p>
           </div>
-          <div className="bg-zinc-900/50 backdrop-blur-md p-6 rounded-3xl border border-zinc-800/80 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <p className="text-sm font-medium text-zinc-400 flex items-center">
-              <AlertCircle className="w-4 h-4 mr-2" /> Threats Neutralized
+          <div className="glass-card p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(248,113,113,0.15)] hover:border-red-500/30 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <p className="text-xs font-bold text-zinc-400 flex items-center tracking-widest uppercase mb-3">
+              <AlertCircle className="w-4 h-4 mr-2 text-red-400" /> Threats Neutralized
             </p>
-            <p className="text-4xl font-black mt-3 font-mono tracking-tight text-red-400">
+            <p className="text-4xl font-black font-mono tracking-tight text-red-400 drop-shadow-[0_0_15px_rgba(248,113,113,0.3)]">
               {anomalyCount}
             </p>
           </div>
@@ -178,15 +219,18 @@ function App() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           
           {/* Left Column: Transaction Feed */}
-          <div className="xl:col-span-2 flex flex-col">
+          <div className="xl:col-span-2 h-[800px]">
             <TransactionFeed />
           </div>
 
-          {/* Right Column: Form */}
-          <div className="xl:col-span-1 h-full">
-            <div className="bg-[#111113] p-8 rounded-3xl border border-zinc-800 shadow-2xl sticky top-8">
-              <h2 className="text-xl font-bold mb-8 text-white flex items-center">
-                <CreditCard className="w-5 h-5 mr-3 text-zinc-400" /> New Entry
+          {/* Right Column */}
+          <div className="xl:col-span-1 h-[800px] flex flex-col gap-8">
+            
+            {/* New Entry Form */}
+            <div className="glass-panel p-8 rounded-3xl shrink-0 relative overflow-hidden group">
+              <div className="absolute -inset-0.5 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 blur-xl"></div>
+              <h2 className="text-xl font-bold mb-8 text-white flex items-center relative z-10">
+                <CreditCard className="w-5 h-5 mr-3 text-emerald-400" /> New Entry
               </h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -252,17 +296,27 @@ function App() {
               </form>
             </div>
             
-            <div className="mt-8">
+            {/* Subscriptions Manager */}
+            <div className="flex-1 min-h-0">
               <SubscriptionsManager />
             </div>
           </div>
-
         </div>
       </div>
       
       {/* AI Chat Widget */}
       <AIChatWidget />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <CurrencyProvider>
+      <AccountProvider>
+        <AppContent />
+      </AccountProvider>
+    </CurrencyProvider>
   );
 }
 

@@ -1,0 +1,33 @@
+ML Service: Models loaded successfully.
+ 
+ -------------- celery@fedora v5.6.3 (recovery)
+--- ***** ----- 
+-- ******* ---- Linux-7.0.13-100.fc43.x86_64-x86_64-with-glibc2.42 2026-07-11 21:45:47
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         seg_worker:0x7fbbddf36900
+- ** ---------- .> transport:   amqp://seg_user:**@localhost:5672//
+- ** ---------- .> results:     redis://localhost:6379/1
+- *** --- * --- .> concurrency: 8 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . process_csv_batch
+
+[2026-07-11 21:45:47,955: INFO/MainProcess] Connected to amqp://seg_user:**@127.0.0.1:5672//
+[2026-07-11 21:45:47,958: INFO/MainProcess] mingle: searching for neighbors
+[2026-07-11 21:45:48,972: INFO/MainProcess] mingle: all alone
+[2026-07-11 21:45:48,987: INFO/MainProcess] celery@fedora ready.
+[2026-07-11 21:45:50,515: INFO/MainProcess] Task process_csv_batch[09a94fd3-c809-4175-8863-0c8c4892694b] received
+[2026-07-11 21:45:50,523: WARNING/ForkPoolWorker-4] /home/wasim/Documents/github/smart-expense-guardian/venv/lib64/python3.14/site-packages/sklearn/ensemble/_base.py:174: UserWarning: Loky-backed parallel loops cannot be called in a multiprocessing, setting n_jobs=1
+  n_jobs = min(effective_n_jobs(n_jobs), n_estimators)
+
+[2026-07-11 21:45:50,557: WARNING/ForkPoolWorker-4] Prediction error: The feature names should match those that were passed during fit.
+Feature names seen at fit time, yet now missing:
+- hour
+- merchant_freq
+[2026-07-11 21:45:50,624: INFO/ForkPoolWorker-4] Task process_csv_batch[09a94fd3-c809-4175-8863-0c8c4892694b] succeeded in 0.10863880900024014s: {'current': 1, 'total': 1, 'status': 'Task completed!', 'result': 1}

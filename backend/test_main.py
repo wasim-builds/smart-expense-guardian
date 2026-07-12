@@ -3,9 +3,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.main import app, load_models
-from backend.database import Base, get_db
-from backend import models
+from backend.main import app
+from backend.domain.models import Base
+from backend.database import get_db
+from backend.domain import models
 
 # Use an in-memory SQLite DB for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -27,15 +28,13 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
-    # Load ML models
-    load_models()
     yield
     Base.metadata.drop_all(bind=engine)
 
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy", "message": "Smart Expense Guardian API is running"}
+    assert response.json() == {"message": "Smart Expense Guardian API V2 is running!"}
 
 def test_create_transaction():
     tx_data = {

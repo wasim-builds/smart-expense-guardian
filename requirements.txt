@@ -12,3 +12,8 @@ python-dotenv
 pydantic-settings
 alembic
 markdown-pdf
+python-multipart
+psycopg2-binary
+redis
+celery
+pika

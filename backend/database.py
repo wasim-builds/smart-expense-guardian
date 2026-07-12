@@ -2,16 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from pydantic_settings import BaseSettings
-
-class Settings(BaseSettings):
-    database_url: str = "sqlite:///./expenses.db"
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
-
-settings = Settings()
+from backend.core.config import settings
 
 # Check if SQLite is being used for specific connect_args
 connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}

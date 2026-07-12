@@ -2,14 +2,18 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { CalendarClock, AlertCircle, XCircle } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
+import { useAccount } from '../context/AccountContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function SubscriptionsManager() {
+  const { formatCurrency } = useCurrency();
+  const { activeAccount } = useAccount();
   const { data, isLoading } = useQuery({
-    queryKey: ['subscriptions'],
+    queryKey: ['subscriptions', activeAccount],
     queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/analytics/subscriptions`);
+      const res = await axios.get(`${API_BASE_URL}/analytics/subscriptions?account_name=${encodeURIComponent(activeAccount)}`);
       return res.data;
     }
   });
@@ -31,7 +35,7 @@ export default function SubscriptionsManager() {
           <CalendarClock className="w-5 h-5 mr-3 text-purple-400" /> Fixed Costs
         </h2>
         <span className="text-xs font-bold bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full border border-purple-500/20 uppercase tracking-widest">
-          ${data.total_fixed_costs.toFixed(2)} / Mo
+          {formatCurrency(data.total_fixed_costs)} / Mo
         </span>
       </div>
 
@@ -54,7 +58,7 @@ export default function SubscriptionsManager() {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <p className="font-bold text-zinc-300 font-mono">${sub.amount.toFixed(2)}</p>
+                <p className="font-bold text-zinc-300 font-mono">{formatCurrency(sub.amount)}</p>
                 <button 
                   onClick={() => alert('Demo only: Cancel subscription feature initiated!')}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg border border-red-500/20"

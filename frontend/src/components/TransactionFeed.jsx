@@ -2,24 +2,31 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
-import { ShieldAlert, Receipt, ChevronRight, Search, Trash2, X, Download, Filter } from 'lucide-react';
+import { ShieldAlert, Receipt, ChevronRight, Search, Trash2, X, Download, Filter, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useCurrency } from '../context/CurrencyContext';
+import { useAccount } from '../context/AccountContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function TransactionFeed() {
   const queryClient = useQueryClient();
+  const { formatCurrency } = useCurrency();
+  const { activeAccount } = useAccount();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selectedTx, setSelectedTx] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   // Fetch transactions with filters
   const { data: transactions = [], isLoading } = useQuery({
-    queryKey: ['transactions', search, categoryFilter],
+    queryKey: ['transactions', search, categoryFilter, activeAccount],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (categoryFilter) params.append('category', categoryFilter);
+      if (activeAccount) params.append('account_name', activeAccount);
       
       const { data } = await axios.get(`${API_BASE_URL}/transactions?${params.toString()}`);
       return data;
@@ -28,9 +35,9 @@ export default function TransactionFeed() {
 
   // Fetch categories for filter dropdown
   const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ['categories', activeAccount],
     queryFn: async () => {
-      const { data } = await axios.get(`${API_BASE_URL}/analytics/categories`);
+      const { data } = await axios.get(`${API_BASE_URL}/analytics/categories?account_name=${encodeURIComponent(activeAccount)}`);
       return data;
     }
   });
@@ -52,24 +59,106 @@ export default function TransactionFeed() {
   });
 
   const handleExport = () => {
-    window.open(`${API_BASE_URL}/transactions/export`, '_blank');
+    window.open(`${API_BASE_URL}/transactions/export?account_name=${encodeURIComponent(activeAccount)}`, '_blank');
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('account_name', activeAccount);
+
+    setIsUploading(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/transactions/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      const jobId = res.data.job_id;
+      if (jobId) {
+        toast.loading(`Processing file...`, { id: jobId });
+        
+        // Poll for status
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusRes = await axios.get(`${API_BASE_URL}/transactions/upload/status/${jobId}`);
+            const status = statusRes.data.status;
+            
+            if (status === 'SUCCESS') {
+              clearInterval(pollInterval);
+              toast.success(`Successfully categorized and uploaded transactions!`, { id: jobId });
+              queryClient.invalidateQueries(['transactions']);
+              queryClient.invalidateQueries(['analyticsSummary']);
+              setIsUploading(false);
+            } else if (status === 'FAILURE') {
+              clearInterval(pollInterval);
+              toast.error(`Upload failed: ${statusRes.data.error || 'Unknown error'}`, { id: jobId });
+              setIsUploading(false);
+            } else if (status === 'PROGRESS') {
+                const progress = statusRes.data.progress;
+                if (progress && progress.total) {
+                    toast.loading(`Processing ${progress.current} / ${progress.total}...`, { id: jobId });
+                }
+            }
+          } catch (err) {
+            clearInterval(pollInterval);
+            toast.error("Failed to check status", { id: jobId });
+            setIsUploading(false);
+          }
+        }, 2000);
+      } else {
+        setIsUploading(false);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload statement');
+      setIsUploading(false);
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   return (
-    <div className="bg-zinc-900/40 backdrop-blur-xl rounded-3xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col h-[600px] relative">
+    <div className="glass-panel rounded-3xl overflow-hidden flex flex-col h-full relative">
       
       {/* Header & Filters */}
-      <div className="px-8 py-6 border-b border-zinc-800/80 sticky top-0 bg-zinc-900/90 backdrop-blur-md z-10 space-y-4">
+      <div className="px-6 py-5 border-b border-white/5 sticky top-0 bg-[#050505]/60 backdrop-blur-2xl z-10 space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-white flex items-center">
             <Receipt className="w-5 h-5 mr-3 text-zinc-400" /> Encrypted Ledger
           </h2>
-          <button 
-            onClick={handleExport}
-            className="flex items-center text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-emerald-400 transition-colors bg-zinc-800/50 px-3 py-2 rounded-lg"
-          >
-            <Download className="w-4 h-4 mr-2" /> Export CSV
-          </button>
+          <div className="flex space-x-2">
+            <input 
+              type="file" 
+              accept=".csv" 
+              ref={fileInputRef} 
+              className="hidden" 
+              onChange={handleFileUpload}
+            />
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="flex items-center text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-emerald-400 transition-colors bg-zinc-800/50 px-3 py-2 rounded-lg disabled:opacity-50"
+            >
+              {isUploading ? (
+                <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mr-2"></div>
+              ) : (
+                <Upload className="w-4 h-4 mr-2" />
+              )}
+              Upload CSV
+            </button>
+            <button 
+              onClick={handleExport}
+              className="flex items-center text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-emerald-400 transition-colors bg-zinc-800/50 px-3 py-2 rounded-lg"
+            >
+              <Download className="w-4 h-4 mr-2" /> Export CSV
+            </button>
+          </div>
         </div>
 
         <div className="flex space-x-4">
@@ -117,7 +206,7 @@ export default function TransactionFeed() {
               <div 
                 key={tx.id} 
                 onClick={() => setSelectedTx(tx)}
-                className="group flex items-center justify-between p-4 hover:bg-zinc-800/50 rounded-2xl transition-all cursor-pointer border border-transparent hover:border-zinc-700/50"
+                className="group flex items-center justify-between py-3 px-4 hover:bg-white/5 rounded-2xl transition-all duration-300 cursor-pointer border-b border-white/5 last:border-0 hover:translate-x-1 hover:shadow-lg"
               >
                 <div className="flex items-center space-x-4">
                   <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg border ${tx.is_fraud ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-zinc-800 text-zinc-300 border-zinc-700/50'}`}>
@@ -137,7 +226,7 @@ export default function TransactionFeed() {
                 <div className="flex items-center space-x-6">
                    <div className="flex flex-col items-end">
                     <span className={`text-base font-bold font-mono tracking-tight ${tx.is_fraud ? 'text-red-400' : 'text-white'}`}>
-                      ${tx.amount.toFixed(2)}
+                      {formatCurrency(tx.amount)}
                     </span>
                     <div className="mt-1">
                       {tx.is_fraud ? (
@@ -161,10 +250,10 @@ export default function TransactionFeed() {
 
       {/* Transaction Detail Drawer Overlay */}
       {selectedTx && (
-        <div className="absolute inset-y-0 right-0 w-full md:w-[400px] bg-zinc-900 border-l border-zinc-800 shadow-2xl flex flex-col transform transition-transform duration-300">
-          <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-black/20">
-            <h3 className="font-bold text-white">Transaction Details</h3>
-            <button onClick={() => setSelectedTx(null)} className="text-zinc-500 hover:text-white transition-colors p-2 bg-zinc-800 rounded-full">
+        <div className="absolute inset-y-0 right-0 w-full md:w-[400px] bg-[#050505]/80 backdrop-blur-3xl border-l border-white/10 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] flex flex-col transform transition-transform duration-500 ease-out">
+          <div className="p-6 border-b border-white/5 flex justify-between items-center bg-transparent">
+            <h3 className="font-bold text-white tracking-wide uppercase text-sm">Transaction Details</h3>
+            <button onClick={() => setSelectedTx(null)} className="text-zinc-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -175,7 +264,7 @@ export default function TransactionFeed() {
               <div className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center border-2 ${selectedTx.is_fraud ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
                 {selectedTx.is_fraud ? <ShieldAlert className="w-10 h-10" /> : <Receipt className="w-10 h-10" />}
               </div>
-              <h2 className="text-3xl font-black text-white font-mono mt-4">${selectedTx.amount.toFixed(2)}</h2>
+              <h2 className="text-3xl font-black text-white font-mono mt-4">{formatCurrency(selectedTx.amount)}</h2>
               <p className="text-zinc-400 font-medium">{selectedTx.merchant}</p>
               <p className="text-xs text-zinc-500">{format(parseISO(selectedTx.date), 'MMMM do, yyyy h:mm a')}</p>
             </div>

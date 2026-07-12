@@ -1,0 +1,63 @@
+INFO:     Started server process [13290]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+ML Service: Models loaded successfully.
+INFO:     127.0.0.1:58200 - "POST /transactions/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58208 - "GET /transactions/upload/status/09a94fd3-c809-4175-8863-0c8c4892694b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58210 - "GET /transactions/upload/status/09a94fd3-c809-4175-8863-0c8c4892694b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58226 - "GET /transactions/upload/status/09a94fd3-c809-4175-8863-0c8c4892694b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58236 - "GET /transactions/upload/status/09a94fd3-c809-4175-8863-0c8c4892694b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58238 - "GET /transactions/upload/status/09a94fd3-c809-4175-8863-0c8c4892694b HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46156 - "GET /transactions?account_name=Main+Account HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:46198 - "GET /accounts HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:46170 - "GET /analytics/categories?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46184 - "GET /analytics/subscriptions?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46148 - "GET /analytics/summary?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46184 - "GET /accounts/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46148 - "GET /transactions/?account_name=Main+Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49052 - "GET /transactions?account_name=Main+Account HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:49050 - "GET /analytics/summary?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49086 - "GET /accounts HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:49074 - "GET /analytics/subscriptions?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49062 - "GET /analytics/categories?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49062 - "GET /transactions/?account_name=Main+Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49062 - "GET /accounts/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53104 - "GET /api/v1/accounts HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:40702 - "GET /analytics/summary?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40710 - "GET /transactions?account_name=Main+Account HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:40722 - "GET /analytics/categories?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40736 - "GET /analytics/subscriptions?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40702 - "GET /accounts HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:40736 - "GET /transactions/?account_name=Main+Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40722 - "GET /accounts/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47720 - "GET /transactions?account_name=Main+Account HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:47758 - "GET /accounts HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:47712 - "GET /analytics/summary?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47744 - "GET /analytics/subscriptions?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47734 - "GET /analytics/categories?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47758 - "GET /accounts/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47720 - "GET /transactions/?account_name=Main+Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41260 - "GET /api/v1/analytics/overview HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:36988 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36988 - "GET /analytics/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58792 - "GET /analytics/categories HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58792 - "GET /analytics/subscriptions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58792 - "GET /accounts/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58792 - "GET /transactions/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58126 - "GET /transactions?account_name=Main+Account HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58142 - "GET /analytics/categories?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58154 - "GET /accounts HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58126 - "GET /analytics/subscriptions?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58164 - "GET /transactions/?account_name=Main+Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58126 - "GET /accounts/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55538 - "GET /transactions?account_name=Main+Account HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:55568 - "GET /accounts HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:55544 - "GET /analytics/categories?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55556 - "GET /analytics/subscriptions?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55544 - "GET /accounts/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55556 - "GET /transactions/?account_name=Main+Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45200 - "OPTIONS /ai/chat?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45200 - "POST /ai/chat?account_name=Main%20Account HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:45200 - "OPTIONS /ai/chat/?account_name=Main%20Account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45200 - "POST /ai/chat/?account_name=Main%20Account HTTP/1.1" 200 OK

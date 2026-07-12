@@ -1,0 +1,50 @@
+from sqlalchemy.orm import Session
+from typing import List, Optional
+from backend.domain import models, schemas
+from datetime import datetime, timezone
+
+def get_transactions(db: Session, account_name: Optional[str] = None, search: Optional[str] = None, category: Optional[str] = None) -> List[models.Transaction]:
+    query = db.query(models.Transaction).order_by(models.Transaction.date.desc())
+    if search:
+        query = query.filter(models.Transaction.merchant.ilike(f"%{search}%"))
+    if category:
+        query = query.filter(models.Transaction.category == category)
+    if account_name:
+        query = query.filter(models.Transaction.account_name == account_name)
+    return query.all()
+
+def create_transaction(db: Session, tx: schemas.TransactionCreate, category: str, is_fraud: bool, anomaly_score: float) -> models.Transaction:
+    db_tx = models.Transaction(
+        merchant=tx.merchant,
+        description=tx.description,
+        amount=tx.amount,
+        account_name=tx.account_name,
+        category=category,
+        is_fraud=is_fraud,
+        anomaly_score=anomaly_score,
+        date=datetime.fromisoformat(tx.date.replace('Z', '+00:00')) if tx.date else datetime.now(timezone.utc)
+    )
+    db.add(db_tx)
+    db.commit()
+    db.refresh(db_tx)
+    return db_tx
+
+def get_all_transactions(db: Session, account_name: Optional[str] = None) -> List[models.Transaction]:
+    query = db.query(models.Transaction).order_by(models.Transaction.date.desc())
+    if account_name:
+        query = query.filter(models.Transaction.account_name == account_name)
+    return query.all()
+
+def get_accounts(db: Session) -> List[str]:
+    accounts = db.query(models.Transaction.account_name).distinct().all()
+    account_list = [a[0] for a in accounts if a[0]]
+    if "Main Account" not in account_list:
+        account_list.insert(0, "Main Account")
+    return account_list
+
+def get_categories(db: Session, account_name: Optional[str] = None) -> List[str]:
+    query = db.query(models.Transaction.category).distinct()
+    if account_name:
+        query = query.filter(models.Transaction.account_name == account_name)
+    categories = query.all()
+    return [c[0] for c in categories if c[0]]
