@@ -4,12 +4,14 @@ from typing import List, Optional
 
 from backend.database import SessionLocal, get_db
 from backend.repository import transaction_repo
+from backend.api.deps import get_current_user
+from backend.domain.models import User
 
 router = APIRouter()
 
 @router.get("/summary")
-def get_analytics_summary(account_name: Optional[str] = Query(None, description="Filter by account"), db: Session = Depends(get_db)):
-    transactions = transaction_repo.get_all_transactions(db, account_name)
+def get_analytics_summary(account_name: Optional[str] = Query(None, description="Filter by account"), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    transactions = transaction_repo.get_all_transactions(db, current_user.id, account_name)
     
     total_spend = sum(tx.amount for tx in transactions)
     total_fraud = sum(1 for tx in transactions if tx.is_fraud)
@@ -28,12 +30,12 @@ def get_analytics_summary(account_name: Optional[str] = Query(None, description=
     }
 
 @router.get("/categories")
-def get_categories(account_name: Optional[str] = Query(None, description="Filter by account"), db: Session = Depends(get_db)):
-    return transaction_repo.get_categories(db, account_name)
+def get_categories(account_name: Optional[str] = Query(None, description="Filter by account"), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return transaction_repo.get_categories(db, current_user.id, account_name)
 
 @router.get("/subscriptions")
-def get_subscriptions(account_name: Optional[str] = Query(None, description="Filter by account"), db: Session = Depends(get_db)):
-    transactions = transaction_repo.get_all_transactions(db, account_name)
+def get_subscriptions(account_name: Optional[str] = Query(None, description="Filter by account"), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    transactions = transaction_repo.get_all_transactions(db, current_user.id, account_name)
     
     merchant_amounts = {}
     for tx in transactions:

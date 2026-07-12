@@ -8,9 +8,11 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import TransactionFeed from './components/TransactionFeed';
 import SubscriptionsManager from './components/SubscriptionsManager';
 import AIChatWidget from './components/AIChatWidget';
+import AuthScreen from './components/AuthScreen';
 
 import { CurrencyProvider, useCurrency } from './context/CurrencyContext';
 import { AccountProvider, useAccount } from './context/AccountContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -18,6 +20,7 @@ function AppContent() {
   const queryClient = useQueryClient();
   const { currency, changeCurrency, formatCurrency, availableCurrencies } = useCurrency();
   const { activeAccount, changeAccount, accounts, refetchAccounts } = useAccount();
+  const { isAuthenticated, logout } = useAuth();
   
   const [merchant, setMerchant] = useState('');
   const [amount, setAmount] = useState('');
@@ -116,6 +119,10 @@ function AppContent() {
   const transactionCount = summary?.total_transactions || 0;
   const anomalyCount = summary?.total_fraud || 0;
 
+  if (!isAuthenticated) {
+    return <AuthScreen />;
+  }
+
   return (
     <div className="min-h-screen bg-transparent selection:bg-emerald-500/30 p-4 md:p-8 font-sans text-zinc-100">
       <Toaster position="top-right" toastOptions={{ style: { background: '#111113', color: '#fff', border: '1px solid #27272a' } }} />
@@ -179,6 +186,13 @@ function AppContent() {
               </div>
               <span>SYSTEM ONLINE</span>
             </div>
+            
+            <button
+              onClick={logout}
+              className="text-xs font-bold text-zinc-400 hover:text-red-400 transition-colors uppercase tracking-widest px-3 py-2 bg-zinc-800/50 rounded-xl"
+            >
+              Sign Out
+            </button>
           </div>
         </header>
 
@@ -312,11 +326,13 @@ function AppContent() {
 
 function App() {
   return (
-    <CurrencyProvider>
-      <AccountProvider>
-        <AppContent />
-      </AccountProvider>
-    </CurrencyProvider>
+    <AuthProvider>
+      <CurrencyProvider>
+        <AccountProvider>
+          <AppContent />
+        </AccountProvider>
+      </CurrencyProvider>
+    </AuthProvider>
   );
 }
 

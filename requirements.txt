@@ -17,3 +17,6 @@ psycopg2-binary
 redis
 celery
 pika
+passlib[bcrypt]
+bcrypt
+PyJWT

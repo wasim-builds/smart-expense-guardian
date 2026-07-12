@@ -8,7 +8,7 @@ from backend.repository import transaction_repo
 from backend.services.ml_service import analyze_transaction
 
 @celery_app.task(bind=True, name="process_csv_batch")
-def process_csv_batch(self, csv_content: str, account_name: str):
+def process_csv_batch(self, csv_content: str, account_name: str, user_id: int):
     """
     Asynchronously process a CSV file of transactions, run ML inference,
     and save them to the database.
@@ -32,7 +32,7 @@ def process_csv_batch(self, csv_content: str, account_name: str):
             
             tx_create = schemas.TransactionCreate(**tx_dict)
             category, is_anomaly, anomaly_score = analyze_transaction(tx_create)
-            transaction_repo.create_transaction(db, tx_create, category, is_anomaly, anomaly_score)
+            transaction_repo.create_transaction(db, user_id, tx_create, category, is_anomaly, anomaly_score)
             
             processed += 1
             

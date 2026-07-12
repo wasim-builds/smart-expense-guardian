@@ -3,8 +3,8 @@ from typing import List, Optional
 from backend.domain import models, schemas
 from datetime import datetime, timezone
 
-def get_transactions(db: Session, account_name: Optional[str] = None, search: Optional[str] = None, category: Optional[str] = None) -> List[models.Transaction]:
-    query = db.query(models.Transaction).order_by(models.Transaction.date.desc())
+def get_transactions(db: Session, user_id: int, account_name: Optional[str] = None, search: Optional[str] = None, category: Optional[str] = None) -> List[models.Transaction]:
+    query = db.query(models.Transaction).filter(models.Transaction.user_id == user_id).order_by(models.Transaction.date.desc())
     if search:
         query = query.filter(models.Transaction.merchant.ilike(f"%{search}%"))
     if category:
@@ -13,7 +13,7 @@ def get_transactions(db: Session, account_name: Optional[str] = None, search: Op
         query = query.filter(models.Transaction.account_name == account_name)
     return query.all()
 
-def create_transaction(db: Session, tx: schemas.TransactionCreate, category: str, is_fraud: bool, anomaly_score: float) -> models.Transaction:
+def create_transaction(db: Session, user_id: int, tx: schemas.TransactionCreate, category: str, is_fraud: bool, anomaly_score: float) -> models.Transaction:
     db_tx = models.Transaction(
         merchant=tx.merchant,
         description=tx.description,
@@ -22,6 +22,7 @@ def create_transaction(db: Session, tx: schemas.TransactionCreate, category: str
         category=category,
         is_fraud=is_fraud,
         anomaly_score=anomaly_score,
+        user_id=user_id,
         date=datetime.fromisoformat(tx.date.replace('Z', '+00:00')) if tx.date else datetime.now(timezone.utc)
     )
     db.add(db_tx)
@@ -29,21 +30,21 @@ def create_transaction(db: Session, tx: schemas.TransactionCreate, category: str
     db.refresh(db_tx)
     return db_tx
 
-def get_all_transactions(db: Session, account_name: Optional[str] = None) -> List[models.Transaction]:
-    query = db.query(models.Transaction).order_by(models.Transaction.date.desc())
+def get_all_transactions(db: Session, user_id: int, account_name: Optional[str] = None) -> List[models.Transaction]:
+    query = db.query(models.Transaction).filter(models.Transaction.user_id == user_id).order_by(models.Transaction.date.desc())
     if account_name:
         query = query.filter(models.Transaction.account_name == account_name)
     return query.all()
 
-def get_accounts(db: Session) -> List[str]:
-    accounts = db.query(models.Transaction.account_name).distinct().all()
+def get_accounts(db: Session, user_id: int) -> List[str]:
+    accounts = db.query(models.Transaction.account_name).filter(models.Transaction.user_id == user_id).distinct().all()
     account_list = [a[0] for a in accounts if a[0]]
     if "Main Account" not in account_list:
         account_list.insert(0, "Main Account")
     return account_list
 
-def get_categories(db: Session, account_name: Optional[str] = None) -> List[str]:
-    query = db.query(models.Transaction.category).distinct()
+def get_categories(db: Session, user_id: int, account_name: Optional[str] = None) -> List[str]:
+    query = db.query(models.Transaction.category).filter(models.Transaction.user_id == user_id).distinct()
     if account_name:
         query = query.filter(models.Transaction.account_name == account_name)
     categories = query.all()

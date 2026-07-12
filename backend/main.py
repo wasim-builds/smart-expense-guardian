@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.database import engine
 from backend.domain import models
-from backend.api.routes import transactions, analytics, accounts, chat
+from backend.api.routes import transactions, analytics, accounts, chat, auth
 
 app = FastAPI(title="Smart Expense Guardian API")
 
@@ -15,6 +15,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(transactions.router, prefix="/transactions", tags=["transactions"])
 app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 app.include_router(accounts.router, prefix="/accounts", tags=["accounts"])
