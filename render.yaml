@@ -2,6 +2,7 @@ services:
   - type: web
     name: smart-expense-guardian-api
     env: docker
+    plan: free
     dockerContext: .
     dockerfilePath: backend/Dockerfile
     envVars:
@@ -31,9 +32,11 @@ services:
 
   - type: redis
     name: smart-expense-guardian-redis
+    plan: free
     ipAllowList: [] # only allow internal connections
 
 databases:
   - name: smart-expense-guardian-db
     databaseName: smart_expense
     user: seg_user
+    plan: free
