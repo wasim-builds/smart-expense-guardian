@@ -21,5 +21,5 @@ COPY alembic.ini .
 # Make sure Python can find the backend package
 ENV PYTHONPATH=/app
 
-# Command is overridden in docker-compose.yml depending on the service
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Celery in the background, then run FastAPI in the foreground
+CMD ["sh", "-c", "alembic upgrade head && celery -A backend.workers.celery_app:celery_app worker --loglevel=info & uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
