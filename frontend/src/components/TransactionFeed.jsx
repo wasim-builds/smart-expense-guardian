@@ -72,11 +72,7 @@ export default function TransactionFeed() {
 
     setIsUploading(true);
     try {
-      const res = await axios.post(`${API_BASE_URL}/transactions/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const res = await axios.post(`${API_BASE_URL}/transactions/upload`, formData);
       
       const jobId = res.data.job_id;
       if (jobId) {

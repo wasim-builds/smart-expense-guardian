@@ -26,7 +26,20 @@ def analyze_transaction(tx: schemas.TransactionCreate):
             category = category_model.predict([f"{tx.merchant} {tx.description}"])[0]
             
             # Fraud Detection
-            df_fraud = pd.DataFrame([{"amount": tx.amount}])
+            hour = 12
+            if tx.date:
+                try:
+                    from datetime import datetime
+                    dt = datetime.fromisoformat(str(tx.date).replace('Z', '+00:00'))
+                    hour = dt.hour
+                except:
+                    pass
+                    
+            df_fraud = pd.DataFrame([{
+                "amount": tx.amount,
+                "hour": hour,
+                "merchant_freq": 1
+            }])
             pred = fraud_model.predict(df_fraud)[0]
             scores = fraud_model.decision_function(df_fraud)
             

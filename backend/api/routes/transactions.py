@@ -26,7 +26,7 @@ def add_transaction(tx: schemas.TransactionCreate, db: Session = Depends(get_db)
 @router.get("", response_model=List[schemas.TransactionResponse])
 def read_transactions(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 1000, 
     search: Optional[str] = None,
     category: Optional[str] = None,
     account_name: Optional[str] = Query(None, description="Filter by account"),

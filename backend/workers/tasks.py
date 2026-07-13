@@ -16,17 +16,26 @@ def process_csv_batch(self, csv_content: str, account_name: str, user_id: int):
     db = SessionLocal()
     try:
         df = pd.read_csv(io.StringIO(csv_content))
-        cols = [c.lower() for c in df.columns]
+        df.columns = [str(c).strip().lower() for c in df.columns]
+        cols = df.columns
         
         total_rows = len(df)
         processed = 0
         
         for _, row in df.iterrows():
+            amount_val = row.get('amount')
+            if pd.isna(amount_val) and 'amt' in cols:
+                amount_val = row.get('amt')
+            try:
+                amount = float(amount_val)
+            except:
+                amount = 0.0
+
             tx_dict = {
                 "merchant": str(row.get('merchant', '')),
-                "amount": float(row.get('amount', 0.0)),
+                "amount": amount,
                 "description": str(row.get('description', '')),
-                "date": str(row.get('date', '')) if 'date' in cols else None,
+                "date": str(row.get('date', str(row.get('trans_date_trans_time', '')))),
                 "account_name": account_name
             }
             
