@@ -28,7 +28,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: "https://your-vercel-domain.vercel.app" # REPLACE THIS AFTER VERCEL DEPLOYMENT
+        value: "https://smart-expense-guardian.vercel.app"
 
   - type: redis
     name: smart-expense-guardian-redis
