@@ -18,12 +18,8 @@ export function AccountProvider({ children }) {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Ensure activeAccount is valid when accounts change
-  useEffect(() => {
-    if (accounts.length > 0 && !accounts.includes(activeAccount)) {
-      setActiveAccount(accounts[0]);
-    }
-  }, [accounts]);
+  // Removed aggressive useEffect that reverted activeAccount to accounts[0]
+  // This allows users to create and stay on new accounts that don't have transactions yet.
 
   const changeAccount = (accountName) => {
     setActiveAccount(accountName);

@@ -49,3 +49,11 @@ def get_categories(db: Session, user_id: int, account_name: Optional[str] = None
         query = query.filter(models.Transaction.account_name == account_name)
     categories = query.all()
     return [c[0] for c in categories if c[0]]
+
+def delete_transaction(db: Session, user_id: int, transaction_id: int) -> bool:
+    tx = db.query(models.Transaction).filter(models.Transaction.id == transaction_id, models.Transaction.user_id == user_id).first()
+    if tx:
+        db.delete(tx)
+        db.commit()
+        return True
+    return False

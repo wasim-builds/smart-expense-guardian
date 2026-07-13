@@ -15,7 +15,7 @@ const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f43f5e', '#f59e0b', '#06b6d4'
 export default function AnalyticsDashboard() {
   const { formatCurrency } = useCurrency();
   const { activeAccount } = useAccount();
-  const [budgetLimit, setBudgetLimit] = useState(5000);
+  const [budgetLimit, setBudgetLimit] = useState(null);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
 
@@ -37,6 +37,13 @@ export default function AnalyticsDashboard() {
     } else {
       toast.error("Please enter a valid number");
     }
+  };
+
+  const handleClearBudget = () => {
+    localStorage.removeItem('monthlyBudget');
+    setBudgetLimit(null);
+    setIsEditingBudget(false);
+    toast.success("Budget limit cleared");
   };
 
   const { data, isLoading } = useQuery({
@@ -72,12 +79,12 @@ export default function AnalyticsDashboard() {
   };
 
   const totalSpend = data.total_spend || 0;
-  const rawPercent = (totalSpend / budgetLimit) * 100;
+  const rawPercent = budgetLimit ? (totalSpend / budgetLimit) * 100 : 0;
   const displayPercent = isFinite(rawPercent) ? rawPercent : 0;
-  const ringPercent = Math.min(displayPercent, 100);
+  const ringPercent = budgetLimit ? Math.min(displayPercent, 100) : 0;
   
   // Color the ring red if over 80%, dark red if over 100%
-  const ringColor = displayPercent > 100 ? '#ef4444' : displayPercent >= 80 ? '#fbbf24' : '#10b981';
+  const ringColor = !budgetLimit ? '#27272a' : displayPercent > 100 ? '#ef4444' : displayPercent >= 80 ? '#fbbf24' : '#10b981';
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (ringPercent / 100) * circumference;
@@ -104,13 +111,16 @@ export default function AnalyticsDashboard() {
             <button onClick={handleSaveBudget} className="text-emerald-400 hover:text-emerald-300">
               <Save className="w-4 h-4" />
             </button>
+            <button onClick={handleClearBudget} className="text-red-400 hover:text-red-300 text-xs font-bold uppercase ml-2">
+              Clear
+            </button>
           </div>
         ) : (
           <button 
-            onClick={() => { setBudgetInput(budgetLimit.toString()); setIsEditingBudget(true); }}
+            onClick={() => { setBudgetInput(budgetLimit ? budgetLimit.toString() : ''); setIsEditingBudget(true); }}
             className="absolute top-5 right-6 text-xs text-emerald-400 hover:text-emerald-300 font-bold uppercase bg-emerald-500/10 px-3 py-1.5 rounded-lg z-20 transition-colors"
           >
-            Edit
+            {budgetLimit ? 'Edit' : 'Set Budget'}
           </button>
         )}
 
@@ -139,18 +149,27 @@ export default function AnalyticsDashboard() {
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               className="transition-all duration-1000 ease-out drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-              filter="url(#glow)"
+              filter={budgetLimit ? "url(#glow)" : ""}
             />
           </svg>
           <div className="absolute flex flex-col items-center justify-center text-center">
-            <span className="text-3xl font-black font-mono text-white">
-              {displayPercent.toFixed(0)}%
-            </span>
-            <div className="text-[10px] font-medium text-zinc-500 mt-2 flex flex-col items-center leading-tight w-24">
-              <span className="truncate w-full text-center">{formatCurrency(totalSpend)}</span>
-              <span className="text-zinc-600">out of</span>
-              <span className="truncate w-full text-center">{formatCurrency(budgetLimit)}</span>
-            </div>
+            {budgetLimit ? (
+              <>
+                <span className="text-3xl font-black font-mono text-white">
+                  {displayPercent.toFixed(0)}%
+                </span>
+                <div className="text-[10px] font-medium text-zinc-500 mt-2 flex flex-col items-center leading-tight w-24">
+                  <span className="truncate w-full text-center">{formatCurrency(totalSpend)}</span>
+                  <span className="text-zinc-600">out of</span>
+                  <span className="truncate w-full text-center">{formatCurrency(budgetLimit)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center">
+                <span className="text-zinc-500 text-sm font-medium">No Budget</span>
+                <span className="text-white font-bold mt-1">{formatCurrency(totalSpend)} spent</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

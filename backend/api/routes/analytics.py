@@ -17,16 +17,20 @@ def get_analytics_summary(account_name: Optional[str] = Query(None, description=
     total_fraud = sum(1 for tx in transactions if tx.is_fraud)
     
     category_totals = {}
+    merchant_totals = {}
     for tx in transactions:
         category_totals[tx.category] = category_totals.get(tx.category, 0) + tx.amount
+        merchant_totals[tx.merchant] = merchant_totals.get(tx.merchant, 0) + tx.amount
         
     sorted_categories = sorted(category_totals.items(), key=lambda x: x[1], reverse=True)
+    sorted_merchants = sorted(merchant_totals.items(), key=lambda x: x[1], reverse=True)[:5]
     
     return {
         "total_spend": total_spend,
         "total_transactions": len(transactions),
         "total_fraud": total_fraud,
-        "category_breakdown": [{"category": k, "amount": v} for k, v in sorted_categories]
+        "category_breakdown": [{"category": k, "amount": v} for k, v in sorted_categories],
+        "top_merchants": [{"merchant": k, "amount": v} for k, v in sorted_merchants]
     }
 
 @router.get("/categories")

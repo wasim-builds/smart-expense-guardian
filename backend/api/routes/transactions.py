@@ -18,12 +18,12 @@ from celery.result import AsyncResult
 
 router = APIRouter()
 
-@router.post("/", response_model=schemas.TransactionResponse)
+@router.post("", response_model=schemas.TransactionResponse)
 def add_transaction(tx: schemas.TransactionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     category, is_anomaly, anomaly_score = analyze_transaction(tx)
     return transaction_repo.create_transaction(db, current_user.id, tx, category, is_anomaly, anomaly_score)
 
-@router.get("/", response_model=List[schemas.TransactionResponse])
+@router.get("", response_model=List[schemas.TransactionResponse])
 def read_transactions(
     skip: int = 0, 
     limit: int = 100, 
@@ -35,6 +35,13 @@ def read_transactions(
 ):
     txs = transaction_repo.get_transactions(db, current_user.id, account_name=account_name, search=search, category=category)
     return txs[skip : skip + limit]
+
+@router.delete("/{tx_id}")
+def delete_transaction(tx_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    success = transaction_repo.delete_transaction(db, current_user.id, tx_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return {"message": "Transaction deleted successfully"}
 
 @router.post("/upload")
 async def upload_transactions(file: UploadFile = File(...), account_name: str = Form("Main Account"), current_user: User = Depends(get_current_user)):

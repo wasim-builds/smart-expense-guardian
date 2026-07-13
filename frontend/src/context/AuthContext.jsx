@@ -11,8 +11,14 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+  const initialToken = localStorage.getItem('token') || null;
+  const [token, setToken] = useState(initialToken);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!initialToken);
+
+  // Synchronously set initial axios header to prevent race conditions on first load
+  if (initialToken && !axios.defaults.headers.common['Authorization']) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${initialToken}`;
+  }
 
   useEffect(() => {
     if (token) {

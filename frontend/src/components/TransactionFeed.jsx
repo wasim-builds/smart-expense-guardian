@@ -48,8 +48,8 @@ export default function TransactionFeed() {
       await axios.delete(`${API_BASE_URL}/transactions/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['transactions']);
-      queryClient.invalidateQueries(['analyticsSummary']);
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['analyticsSummary'] });
       toast.success('Transaction deleted');
       setSelectedTx(null);
     },
@@ -91,8 +91,8 @@ export default function TransactionFeed() {
             if (status === 'SUCCESS') {
               clearInterval(pollInterval);
               toast.success(`Successfully categorized and uploaded transactions!`, { id: jobId });
-              queryClient.invalidateQueries(['transactions']);
-              queryClient.invalidateQueries(['analyticsSummary']);
+              queryClient.invalidateQueries({ queryKey: ['transactions'] });
+              queryClient.invalidateQueries({ queryKey: ['analyticsSummary'] });
               setIsUploading(false);
             } else if (status === 'FAILURE') {
               clearInterval(pollInterval);
@@ -128,7 +128,7 @@ export default function TransactionFeed() {
       
       {/* Header & Filters */}
       <div className="px-6 py-5 border-b border-white/5 sticky top-0 bg-[#050505]/60 backdrop-blur-2xl z-10 space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h2 className="text-xl font-bold text-white flex items-center">
             <Receipt className="w-5 h-5 mr-3 text-zinc-400" /> Encrypted Ledger
           </h2>
@@ -161,7 +161,7 @@ export default function TransactionFeed() {
           </div>
         </div>
 
-        <div className="flex space-x-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-3 text-zinc-500" />
             <input 
@@ -223,7 +223,7 @@ export default function TransactionFeed() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-6">
+                <div className="flex flex-col items-end sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
                    <div className="flex flex-col items-end">
                     <span className={`text-base font-bold font-mono tracking-tight ${tx.is_fraud ? 'text-red-400' : 'text-white'}`}>
                       {formatCurrency(tx.amount)}
@@ -250,7 +250,7 @@ export default function TransactionFeed() {
 
       {/* Transaction Detail Drawer Overlay */}
       {selectedTx && (
-        <div className="absolute inset-y-0 right-0 w-full md:w-[400px] bg-[#050505]/80 backdrop-blur-3xl border-l border-white/10 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] flex flex-col transform transition-transform duration-500 ease-out">
+        <div className="absolute inset-y-0 right-0 w-full md:w-[400px] bg-[#050505]/95 backdrop-blur-3xl border-l border-white/10 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] flex flex-col transform transition-transform duration-500 ease-out z-50">
           <div className="p-6 border-b border-white/5 flex justify-between items-center bg-transparent">
             <h3 className="font-bold text-white tracking-wide uppercase text-sm">Transaction Details</h3>
             <button onClick={() => setSelectedTx(null)} className="text-zinc-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">

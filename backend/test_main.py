@@ -22,7 +22,14 @@ def override_get_db():
     finally:
         db.close()
 
+from backend.api.deps import get_current_user
+from backend.domain.models import User
+
+def override_get_current_user():
+    return User(id=1, email="test@example.com", hashed_password="hashed")
+
 app.dependency_overrides[get_db] = override_get_db
+app.dependency_overrides[get_current_user] = override_get_current_user
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)

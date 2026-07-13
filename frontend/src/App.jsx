@@ -43,9 +43,9 @@ function AppContent() {
       return data;
     },
     onSuccess: (newTx) => {
-      queryClient.invalidateQueries(['transactions']);
-      queryClient.invalidateQueries(['analyticsSummary']);
-      queryClient.invalidateQueries(['categories']);
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['analyticsSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       
       const currentSpend = summary?.total_spend || 0;
       const newTotal = currentSpend + newTx.amount;
@@ -143,7 +143,7 @@ function AppContent() {
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
             
             <select
               value={activeAccount}
@@ -233,12 +233,12 @@ function AppContent() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           
           {/* Left Column: Transaction Feed */}
-          <div className="xl:col-span-2 h-[800px]">
+          <div className="xl:col-span-2 h-[600px] xl:h-[800px]">
             <TransactionFeed />
           </div>
 
           {/* Right Column */}
-          <div className="xl:col-span-1 h-[800px] flex flex-col gap-8">
+          <div className="xl:col-span-1 h-auto xl:h-[800px] flex flex-col gap-8">
             
             {/* New Entry Form */}
             <div className="glass-panel p-8 rounded-3xl shrink-0 relative overflow-hidden group">
