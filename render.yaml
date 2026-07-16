@@ -28,7 +28,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: "https://smart-expense-guardian.vercel.app"
+        value: "https://smart-expense-guardian.vercel.app,https://smart-expense-guardian-app.web.app,https://smart-expense-guardian-app.firebaseapp.com"
 
   - type: redis
     name: smart-expense-guardian-redis
